@@ -1,4 +1,38 @@
-import React, { useState } from 'react'
+import React, { useReducer } from 'react'
+
+const actionTypes = {
+    INPUT: 'INPUT',
+    BLUR: 'BLUR',
+    RESET: 'RESET'
+}
+
+const initialInputState = {
+    value: '',
+    isTouched: false
+}
+
+const inputStateReducer = (state, action) => {
+    switch(action?.type) {
+        case actionTypes.INPUT:
+            return { 
+                value: action.value,
+                isTouched: state.isTouched
+            }
+        case actionTypes.BLUR:
+            return {
+                value: state.value,
+                isTouched: true
+            }
+        case actionTypes.RESET:
+            return {
+                value: '',
+                isTouched: false
+            }
+        default:
+            console.log(`NO TYPE PROVIDED`.red);
+            break
+    }
+}
 
 export default function useInput(validateValue) {
 
@@ -6,28 +40,25 @@ export default function useInput(validateValue) {
         throw new Error('Argument is not a function');
     }
 
-    const [enteredValue, setEnteredValue] = useState('');
-    const [isTouched, setIsTouched] = useState(false);
+    const [inputState, dispatch] = useReducer(inputStateReducer, initialInputState);
 
-    const valueIsValid = validateValue(enteredValue);
-
-    const hasError = !valueIsValid && isTouched;
+    const valueIsValid = validateValue(inputState.value);
+    const hasError = !valueIsValid && inputState.isTouched;
 
     const valueChangeHandler = (event) => {
-        setEnteredValue(event.target.value);
+        dispatch({type: 'INPUT', value: event.target.value});
     }
 
     const inputBlurHandler = () => {
-        setIsTouched(true);
+        dispatch({type: 'BLUR'});
     }
 
     const reset = () => {
-        setEnteredValue('');
-        setIsTouched(false);
+        dispatch({type: 'RESET'})
     }
 
     return { 
-        value: enteredValue, 
+        value: inputState.value, 
         hasError,
         isValid: valueIsValid, 
         valueChangeHandler, 
